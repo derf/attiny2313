@@ -3,30 +3,24 @@
 
 #define BRIGHTNESS_MAX 12
 
-inline void set_led_state(char led1, char led2)
+void set_led_state(char led1, char led2)
 {
 	PORTD = (led1 << PD5) | (led2 << PD6);
 }
 
 int check_key_edge(int key, int port)
 {
-	int ret;
-
 	if (PIND & (1 << port)) {
 		if (!key)
-			ret = 1;
+			return 1;
 		else
-			ret = 2;
+			return 2;
 	} else
-		ret = 0;
-
-	return ret;
+		return 0;
 }
 
-int main (void) {
-
-	char led1 = 0;
-	char led2 = 0;
+int main (void)
+{
 	char key1 = 0;
 	char key2 = 0;
 	char key3 = 0;
