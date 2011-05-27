@@ -20,7 +20,7 @@ unsigned char opmode;
 enum {
 	MODE_FADE_INV, MODE_FADE_OUT,  MODE_FADE_SAME, MODE_FADE_IN,
 	MODE_BLINK_INV, MODE_BLINK_OUT, MODE_BLINK_SAME, MODE_BLINK_IN,
-	MODE_UFADE,
+	MODE_UFADE, MODE_BFADE, MODE_DFADE,
 	MODE_END
 };
 
@@ -28,6 +28,7 @@ void set_opmode(void);
 void set_led_blink(char *led, char offset);
 void set_led_fade(char *led, char offset);
 void set_led_ufade(char *led, char offset);
+void set_led_dfaed(char *led, char offset);
 
 void set_opmode(void)
 {
@@ -73,6 +74,14 @@ void set_opmode(void)
 			set_led_ufade(f_led1, 0);
 			set_led_ufade(f_led2, 0);
 			break;
+		case MODE_BFADE:
+			set_led_ufade(f_led1, 0);
+			set_led_dfade(f_led2, 0);
+			break;
+		case MODE_DFADE:
+			set_led_dfade(f_led1, 0);
+			set_led_dfade(f_led2, 0);
+			break;
 	}
 }
 
@@ -99,53 +108,14 @@ void set_led_fade(char *led, char offset)
 
 void set_led_ufade(char *led, char offset)
 {
-	/* 
-	 * Should be:
-	 * led[i] = BRIGHTNESS_MAX * ( ( pow(b, (i / BRIGHTNESS_MAX)) - 1) / (b - 1) );
-	 */
+	for (unsigned char i = 0; i < BRIGHTNESS_MAX; i++)
+		led[(i + offset) % BRIGHTNESS_MAX] = i * i / BRIGHTNESS_MAX;
+}
 
-	/* hardcoded and no offset support due to RAM limitations */
-
-	led[0] = 0;
-	led[1] = 0;
-	led[2] = 1;
-	led[3] = 1;
-	led[4] = 1;
-	led[5] = 2;
-	led[6] = 2;
-	led[7] = 3;
-	led[8] = 3;
-	led[9] = 4;
-	led[10] = 5;
-	led[11] = 6;
-	led[12] = 7;
-	led[13] = 8;
-	led[14] = 9;
-	led[15] = 10;
-	led[16] = 12;
-	led[17] = 14;
-	led[18] = 15;
-	led[19] = 18;
-	led[20] = 20;
-	led[21] = 18;
-	led[22] = 15;
-	led[23] = 14;
-	led[24] = 12;
-	led[25] = 10;
-	led[26] = 9;
-	led[27] = 8;
-	led[28] = 7;
-	led[29] = 6;
-	led[30] = 5;
-	led[31] = 4;
-	led[32] = 3;
-	led[33] = 3;
-	led[34] = 2;
-	led[35] = 2;
-	led[36] = 1;
-	led[37] = 1;
-	led[38] = 1;
-	led[39] = 0;
+void set_led_dfade(char *led, char offset)
+{
+	for (unsigned char i = 0; i < BRIGHTNESS_MAX; i++)
+		led[BRIGHTNESS_MAX - i - 1] = i * i / BRIGHTNESS_MAX;
 }
 
 int main (void)
