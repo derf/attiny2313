@@ -11,20 +11,30 @@ volatile char f_led1[BRIGHTNESS_MAX];
 volatile char f_led2[BRIGHTNESS_MAX];
 
 volatile int cnt_max = BRIGHTNESS_MAX * 2;
-volatile char offset_2 = 10;
+
+char opmode;
+enum {
+	MODE_FADE_INV, MODE_FADE_OUT,  MODE_FADE_SAME, MODE_FADE_IN,
+	MODE_BLINK_INV, MODE_BLINK_OUT, MODE_BLINK_SAME, MODE_BLINK_IN,
+	MODE_END
+};
 
 inline void set_led_states(char led1, char led2)
 {
 	PORTD = (led1 << PD5) | (led2 << PD6);
 }
 
-void set_led_normal(char *led)
+void set_led_blink(char *led, char offset)
 {
-	for (int i = 0; i < BRIGHTNESS_MAX; i++)
-		led[i] = abs(i - (BRIGHTNESS_MAX / 2));
+	for (int i = 0; i < BRIGHTNESS_MAX; i++) {
+		if (((i + offset) % BRIGHTNESS_MAX) < (BRIGHTNESS_MAX / 2))
+			led[i] = BRIGHTNESS_MAX;
+		else
+			led[i] = 0;
+	}
 }
 
-void set_led_offset(char *led, char offset)
+void set_led_fade(char *led, char offset)
 {
 	for (int i = 0; i < BRIGHTNESS_MAX; i++)
 		led[i] = abs(abs(i - offset) - (BRIGHTNESS_MAX / 2));
@@ -42,8 +52,9 @@ int main (void)
 
 	DDRD = (1 << PD5) | (1 << PD6);
 
-	set_led_normal(f_led1);
-	set_led_offset(f_led2, offset_2);
+	opmode = MODE_FADE_INV;
+	set_led_fade(f_led1, 0);
+	set_led_fade(f_led2, BRIGHTNESS_MAX / 2);
 
 	MCUCR = (1 << ISC11) | (1 << ISC10) | (1 << ISC01) | (1 << ISC00);
 	GIMSK = (1 << INT0) | (1 << INT1);
@@ -85,8 +96,41 @@ int main (void)
 
 ISR(INT0_vect)
 {
-	offset_2 = (offset_2 + 10) % BRIGHTNESS_MAX;
-	set_led_offset(f_led2, offset_2);
+	opmode++;
+
+	switch (opmode) {
+		case MODE_END:
+			opmode = MODE_FADE_INV;
+			/* fall-through */
+		case MODE_FADE_INV:
+			set_led_fade(f_led1, 0);
+			set_led_fade(f_led2, BRIGHTNESS_MAX / 2);
+			break;
+		case MODE_FADE_OUT:
+			set_led_fade(f_led2, (BRIGHTNESS_MAX / 2)
+					+ (BRIGHTNESS_MAX / 4));
+			break;
+		case MODE_FADE_SAME:
+			set_led_fade(f_led2, 0);
+			break;
+		case MODE_FADE_IN:
+			set_led_fade(f_led2, BRIGHTNESS_MAX / 4);
+			break;
+		case MODE_BLINK_INV:
+			set_led_blink(f_led1, 0);
+			set_led_blink(f_led2, BRIGHTNESS_MAX / 2);
+			break;
+		case MODE_BLINK_OUT:
+			set_led_blink(f_led2, (BRIGHTNESS_MAX / 2)
+					+ (BRIGHTNESS_MAX / 4));
+			break;
+		case MODE_BLINK_SAME:
+			set_led_blink(f_led2, 0);
+			break;
+		case MODE_BLINK_IN:
+			set_led_blink(f_led2, BRIGHTNESS_MAX / 4);
+			break;
+	}
 }
 
 ISR(INT1_vect)
