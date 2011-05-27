@@ -14,6 +14,7 @@ volatile unsigned char f_led2[BRIGHTNESS_MAX];
 
 volatile unsigned int cnt_max = BRIGHTNESS_MAX * 2;
 
+unsigned char ee_opmode EEMEM;
 unsigned char opmode;
 enum {
 	MODE_FADE_INV, MODE_FADE_OUT,  MODE_FADE_SAME, MODE_FADE_IN,
@@ -21,6 +22,58 @@ enum {
 	MODE_UFADE,
 	MODE_END
 };
+
+void set_opmode(void);
+void set_led_blink(char *led, char offset);
+void set_led_fade(char *led, char offset);
+void set_led_ufade(char *led, char offset);
+
+void set_opmode(void)
+{
+	switch (opmode) {
+		case MODE_END:
+			opmode = MODE_FADE_INV;
+			/* fall-through */
+		case MODE_FADE_INV:
+			set_led_fade(f_led1, 0);
+			set_led_fade(f_led2, BRIGHTNESS_MAX / 2);
+			break;
+		case MODE_FADE_OUT:
+			set_led_fade(f_led1, 0);
+			set_led_fade(f_led2, (BRIGHTNESS_MAX / 2)
+					+ (BRIGHTNESS_MAX / 4));
+			break;
+		case MODE_FADE_SAME:
+			set_led_fade(f_led1, 0);
+			set_led_fade(f_led2, 0);
+			break;
+		case MODE_FADE_IN:
+			set_led_fade(f_led1, 0);
+			set_led_fade(f_led2, BRIGHTNESS_MAX / 4);
+			break;
+		case MODE_BLINK_INV:
+			set_led_blink(f_led1, 0);
+			set_led_blink(f_led2, BRIGHTNESS_MAX / 2);
+			break;
+		case MODE_BLINK_OUT:
+			set_led_blink(f_led1, 0);
+			set_led_blink(f_led2, (BRIGHTNESS_MAX / 2)
+					+ (BRIGHTNESS_MAX / 4));
+			break;
+		case MODE_BLINK_SAME:
+			set_led_blink(f_led1, 0);
+			set_led_blink(f_led2, 0);
+			break;
+		case MODE_BLINK_IN:
+			set_led_blink(f_led1, 0);
+			set_led_blink(f_led2, BRIGHTNESS_MAX / 4);
+			break;
+		case MODE_UFADE:
+			set_led_ufade(f_led1, 0);
+			set_led_ufade(f_led2, 0);
+			break;
+	}
+}
 
 inline void set_led_states(char led1, char led2)
 {
@@ -106,9 +159,11 @@ int main (void)
 
 	DDRD = (1 << PD5) | (1 << PD6);
 
-	opmode = MODE_FADE_INV;
-	set_led_fade(f_led1, 0);
-	set_led_fade(f_led2, BRIGHTNESS_MAX / 2);
+	opmode = eeprom_read_byte(&ee_opmode);
+	if (opmode == 0xFF)
+		opmode = MODE_FADE_INV;
+
+	set_opmode();
 
 	MCUCR = (1 << ISC11) | (1 << ISC10) | (1 << ISC01) | (1 << ISC00);
 	GIMSK = (1 << INT0) | (1 << INT1);
@@ -148,47 +203,14 @@ int main (void)
 	return 0;
 }
 
+
 ISR(INT0_vect)
 {
 	opmode++;
 
-	switch (opmode) {
-		case MODE_END:
-			opmode = MODE_FADE_INV;
-			/* fall-through */
-		case MODE_FADE_INV:
-			set_led_fade(f_led1, 0);
-			set_led_fade(f_led2, BRIGHTNESS_MAX / 2);
-			break;
-		case MODE_FADE_OUT:
-			set_led_fade(f_led2, (BRIGHTNESS_MAX / 2)
-					+ (BRIGHTNESS_MAX / 4));
-			break;
-		case MODE_FADE_SAME:
-			set_led_fade(f_led2, 0);
-			break;
-		case MODE_FADE_IN:
-			set_led_fade(f_led2, BRIGHTNESS_MAX / 4);
-			break;
-		case MODE_BLINK_INV:
-			set_led_blink(f_led1, 0);
-			set_led_blink(f_led2, BRIGHTNESS_MAX / 2);
-			break;
-		case MODE_BLINK_OUT:
-			set_led_blink(f_led2, (BRIGHTNESS_MAX / 2)
-					+ (BRIGHTNESS_MAX / 4));
-			break;
-		case MODE_BLINK_SAME:
-			set_led_blink(f_led2, 0);
-			break;
-		case MODE_BLINK_IN:
-			set_led_blink(f_led2, BRIGHTNESS_MAX / 4);
-			break;
-		case MODE_UFADE:
-			set_led_ufade(f_led1, 0);
-			set_led_ufade(f_led2, 0);
-			break;
-	}
+	set_opmode();
+
+	eeprom_write_byte(&ee_opmode, opmode);
 }
 
 ISR(INT1_vect)
