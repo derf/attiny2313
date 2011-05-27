@@ -12,7 +12,8 @@
 volatile unsigned char f_led1[BRIGHTNESS_MAX];
 volatile unsigned char f_led2[BRIGHTNESS_MAX];
 
-volatile unsigned int cnt_max = BRIGHTNESS_MAX * 2;
+unsigned int ee_cnt_max EEMEM;
+volatile unsigned int cnt_max;
 
 unsigned char ee_opmode EEMEM;
 unsigned char opmode;
@@ -163,6 +164,10 @@ int main (void)
 	if (opmode == 0xFF)
 		opmode = MODE_FADE_INV;
 
+	cnt_max = eeprom_read_word(&ee_cnt_max);
+	if (!cnt_max || (cnt_max > CNTT_MAX))
+		cnt_max = BRIGHTNESS_MAX * 2;
+
 	set_opmode();
 
 	MCUCR = (1 << ISC11) | (1 << ISC10) | (1 << ISC01) | (1 << ISC00);
@@ -219,4 +224,6 @@ ISR(INT1_vect)
 		cnt_max -= CNTT_INT;
 	else
 		cnt_max = CNTT_MAX;
+
+	eeprom_write_word(&ee_cnt_max, cnt_max);
 }
