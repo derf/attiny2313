@@ -7,12 +7,12 @@
 #define CNTT_MIN BRIGHTNESS_MAX
 #define CNTT_INT BRIGHTNESS_MAX
 
-volatile char f_led1[BRIGHTNESS_MAX];
-volatile char f_led2[BRIGHTNESS_MAX];
+volatile unsigned char f_led1[BRIGHTNESS_MAX];
+volatile unsigned char f_led2[BRIGHTNESS_MAX];
 
-volatile int cnt_max = BRIGHTNESS_MAX * 2;
+volatile unsigned char cnt_max = BRIGHTNESS_MAX * 2;
 
-char opmode;
+unsigned char opmode;
 enum {
 	MODE_FADE_INV, MODE_FADE_OUT,  MODE_FADE_SAME, MODE_FADE_IN,
 	MODE_BLINK_INV, MODE_BLINK_OUT, MODE_BLINK_SAME, MODE_BLINK_IN,
@@ -26,7 +26,7 @@ inline void set_led_states(char led1, char led2)
 
 void set_led_blink(char *led, char offset)
 {
-	for (int i = 0; i < BRIGHTNESS_MAX; i++) {
+	for (unsigned char i = 0; i < BRIGHTNESS_MAX; i++) {
 		if (((i + offset) % BRIGHTNESS_MAX) < (BRIGHTNESS_MAX / 2))
 			led[i] = BRIGHTNESS_MAX;
 		else
@@ -36,7 +36,7 @@ void set_led_blink(char *led, char offset)
 
 void set_led_fade(char *led, char offset)
 {
-	for (int i = 0; i < BRIGHTNESS_MAX; i++)
+	for (unsigned char i = 0; i < BRIGHTNESS_MAX; i++)
 		led[i] = abs(abs(i - offset) - (BRIGHTNESS_MAX / 2));
 }
 
@@ -45,10 +45,10 @@ int main (void)
 	char led1 = 0;
 	char led2 = 0;
 
-	int brightness = 1;
+	unsigned char brightness = 1;
 
-	int cnt = 0;
-	char cur = 0;
+	unsigned int cnt = 0;
+	unsigned char cur = 0;
 
 	DDRD = (1 << PD5) | (1 << PD6);
 
