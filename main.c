@@ -7,6 +7,9 @@
 #define CNTT_MIN 30
 #define CNTT_INT 25
 
+char f_led1[BRIGHTNESS_MAX];
+char f_led2[BRIGHTNESS_MAX];
+
 inline void set_led_states(char led1, char led2)
 {
 	PORTD = (led1 << PD5) | (led2 << PD6);
@@ -23,6 +26,18 @@ int check_key_edge(int key, int port)
 		return 0;
 }
 
+void set_led_normal(char *led)
+{
+	for (int i = 0; i < BRIGHTNESS_MAX; i++)
+		led[i] = abs(i - (BRIGHTNESS_MAX / 2));
+}
+
+void set_led_offset(char *led, char offset)
+{
+	for (int i = 0; i < BRIGHTNESS_MAX; i++)
+		led[i] = abs(abs(i - offset) - (BRIGHTNESS_MAX / 2));
+}
+
 int main (void)
 {
 	char key1 = 0;
@@ -35,24 +50,33 @@ int main (void)
 
 	int cnt = 0;
 	int cnt_max = 100;
-	int cur = 0;
+	char cur = 0;
+	char offset_2 = 15;
 
 	DDRD = (1 << PD5) | (1 << PD6) ;
 
-	while (1) {
+	set_led_normal(f_led1);
+	set_led_offset(f_led2, 15);
 
-		key1 = check_key_edge(key1, PD2);
-		key2 = check_key_edge(key2, PD3);
-		key3 = check_key_edge(key3, PD4);
+	while (1) {
 
 		cnt++;
 
-		if ((key1 == 1) && (cnt_max > CNTT_MIN))
-			cnt_max -= CNTT_INT;
-		else if ((key2 == 1) && (cnt_max < CNTT_MAX))
-			cnt_max += CNTT_INT;
-
 		if (cnt > cnt_max) {
+
+			key1 = check_key_edge(key1, PD2);
+			key2 = check_key_edge(key2, PD3);
+			key3 = check_key_edge(key3, PD4);
+
+			if ((key1 == 1) && (cnt_max > CNTT_MIN))
+				cnt_max -= CNTT_INT;
+			else if ((key2 == 1) && (cnt_max < CNTT_MAX))
+				cnt_max += CNTT_INT;
+			else if (key3 == 1) {
+				offset_2 = (offset_2 + 15) % BRIGHTNESS_MAX;
+				set_led_offset(f_led2, offset_2);
+			}
+
 			brightness++;
 			cnt = 0;
 
@@ -67,10 +91,10 @@ int main (void)
 			led2 = 1;
 		}
 
-		if (cur == abs(brightness - 30))
+		if (cur == f_led1[brightness])
 			led1 = 0;
 
-		if (cur == abs(abs(brightness - 15) - 30))
+		if (cur == f_led2[brightness])
 			led2 = 0;
 
 		set_led_states(led1, led2);
