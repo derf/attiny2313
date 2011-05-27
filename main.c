@@ -1,7 +1,8 @@
 #include <avr/io.h>
+#include <stdlib.h>
 #include <util/delay.h>
 
-#define BRIGHTNESS_MAX 30
+#define BRIGHTNESS_MAX 60
 #define CNTT_MAX 300
 #define CNTT_MIN 30
 #define CNTT_INT 25
@@ -27,9 +28,10 @@ int main (void)
 	char key1 = 0;
 	char key2 = 0;
 	char key3 = 0;
+	char led1 = 0;
+	char led2 = 0;
 
 	int brightness = 1;
-	int direction = 1;
 
 	int cnt = 0;
 	int cnt_max = 100;
@@ -39,8 +41,9 @@ int main (void)
 
 	while (1) {
 
-		key1 = check_key_edge(key1, PD3);
-		key2 = check_key_edge(key2, PD4);
+		key1 = check_key_edge(key1, PD2);
+		key2 = check_key_edge(key2, PD3);
+		key3 = check_key_edge(key3, PD4);
 
 		cnt++;
 
@@ -50,23 +53,27 @@ int main (void)
 			cnt_max += CNTT_INT;
 
 		if (cnt > cnt_max) {
-			brightness += direction;
+			brightness++;
+			cnt = 0;
 
 			if (brightness == BRIGHTNESS_MAX)
-				direction = -1;
-			else if (brightness == 0)
-				direction = 1;
-
-			cnt = 0;
+				brightness = 0;
 		}
 
 		cur = cnt % BRIGHTNESS_MAX;
 
-		if (!cur)
-			set_led_states(1, 0);
+		if (!cur) {
+			led1 = 1;
+			led2 = 1;
+		}
 
-		if (cur == brightness)
-			set_led_states(0, 1);
+		if (cur == abs(brightness - 30))
+			led1 = 0;
+
+		if (cur == abs(abs(brightness - 15) - 30))
+			led2 = 0;
+
+		set_led_states(led1, led2);
 
 	}
 
