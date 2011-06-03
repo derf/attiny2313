@@ -1,8 +1,8 @@
 /.dep/
-/main.eep
-/main.elf
-/main.hex
-/main.lss
-/main.map
-/main.sym
+/*.eep
+/*.elf
+/*.hex
+/*.lss
+/*.map
+/*.sym
 /obj/
