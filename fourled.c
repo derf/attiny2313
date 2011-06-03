@@ -1,49 +1,52 @@
 #include <avr/io.h>
 #include <stdlib.h>
 
-#define LS_0000 0x00
-#define LS_0001 0x01
-#define LS_0010 0x04
-#define LS_0011 0x05
-#define LS_0100 0x10
-#define LS_0101 0x11
-#define LS_0110 0x14
-#define LS_0111 0x15
-#define LS_1000 0x40
-#define LS_1001 0x41
-#define LS_1010 0x44
-#define LS_1011 0x45
-#define LS_1100 0x50
-#define LS_1101 0x51
-#define LS_1110 0x54
-#define LS_1111 0x55
-
-#define ANIM_MAX 8
-#define CNT_MAX 5000
+#define MAX_BRIGHTNESS 50
 
 int main (void)
 {
-	uint16_t cnt = 0;
+	uint8_t cnt = 0;
+	uint8_t cnt_max = 250;
+	uint8_t led[6] = {50, 40, 30, 20,  0,  0};
+	uint8_t inc[6] = {49, 49, 49, 49, 49, 47};
+
+	uint8_t step = 0;
 
 	DDRB = (1 << PB0) | (1 << PB2) | (1 << PB4) | (1 << PB6);
-
-	uint8_t animation[] = {
-		LS_0001,
-		LS_0011,
-		LS_0110,
-		LS_1100,
-		LS_1000,
-		LS_0000,
-		LS_0000,
-		LS_0000
-	};
+	DDRD = (1 << PD5) | (1 << PD6);
 
 	while(1) {
-		if (++cnt == CNT_MAX)
+		if (++cnt == cnt_max) {
 			cnt = 0;
 
-		if ((cnt % (CNT_MAX / ANIM_MAX)) == 0)
-			PORTB = animation[ cnt / (CNT_MAX / ANIM_MAX) ];
+			for (int i = 0; i < 6; i++)
+				led[i] = (led[i] + inc[i]) % MAX_BRIGHTNESS;
+		}
+
+		step = cnt % MAX_BRIGHTNESS;
+
+		if (step == 0) {
+			PORTB = (1 << PB0) | (1 << PB2) | (1 << PB4) | (1 << PB6);
+			PORTD = (1 << PD5) | (1 << PD6);
+		}
+
+		if (step == led[0])
+			PORTB &= ~(1 << PB0);
+
+		if (step == led[1])
+			PORTB &= ~(1 << PB2);
+
+		if (step == led[2])
+			PORTB &= ~(1 << PB4);
+
+		if (step == led[3])
+			PORTB &= ~(1 << PB6);
+
+		if (step == led[4])
+			PORTD &= ~(1 << PD5);
+
+		if (step == led[5])
+			PORTD &= ~(1 << PD6);
 
 	}
 
