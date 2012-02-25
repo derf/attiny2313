@@ -40,16 +40,19 @@ int main (void)
 			step++;
 			cnt = 0;
 
-			if (step == 300) {
+			if (step == 2000) {
 				step = 0;
 				n_red = pwm[rand() % 16];
 				n_green = pwm[rand() % 16];
 				n_blue = pwm[rand() % 16];
 			}
-			if (!(step % 30)) {
-				b_red = (b_red * 3 + n_red) / 4;
-				b_green = (b_green * 3 + n_green) / 4;
-				b_blue = (b_blue * 3+ n_blue) / 4;
+			if (!(step % 100)) {
+				     if (n_red < b_red) b_red--;
+				else if (n_red > b_red) b_red++;
+				     if (n_green < b_green) b_green--;
+				else if (n_green > b_green) b_green++;
+				     if (n_blue < b_blue) b_blue--;
+				else if (n_blue > b_blue) b_blue++;
 			}
 		}
 
