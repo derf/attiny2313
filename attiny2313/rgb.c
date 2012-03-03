@@ -46,7 +46,7 @@ int main (void)
 				n_green = pwm[rand() % 16];
 				n_blue = pwm[rand() % 16];
 			}
-			if (!(step % 100)) {
+			if (!(step % 50)) {
 				     if (n_red < b_red) b_red--;
 				else if (n_red > b_red) b_red++;
 				     if (n_green < b_green) b_green--;
